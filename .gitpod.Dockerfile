@@ -9,16 +9,20 @@ ENV USER=gitpod \
   HOME=/home/gitpod \
   PATH=/home/gitpod/.local/bin:/usr/games:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
+# Create the $USER user. UID must be 33333.
+RUN useradd -l -u 33333 -G wheel -m -d /home/$USER -s /bin/bash $USER
+
+# Add the user to the sudoers file without password prompt
+RUN echo "$USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/$USER
+
+# Create necessary directories for environment setup
+RUN mkdir -p $HOME/.config/direnv $HOME/.bashrc.d && \
+  chmod 700 $HOME/.config/direnv $HOME/.bashrc.d
+
 # Install necessary packages
 RUN dnf update -y && \
   dnf install -y tigervnc-server sudo git rlwrap curl && \
   dnf clean all
-
-# Create the user and set up the environment
-RUN useradd -m -s /bin/bash $USER && \
-  echo "$USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/$USER && \
-  mkdir -p $HOME/.config/direnv $HOME/.bashrc.d && \
-  chmod 700 $HOME/.config/direnv $HOME/.bashrc.d
 
 # # Copy configuration files and scripts
 # COPY novnc-index.html /opt/novnc/index.html
